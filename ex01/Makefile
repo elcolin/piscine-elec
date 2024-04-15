@@ -8,7 +8,7 @@ BIN = $(SRC:%.c=%.bin)
 
 #Bin to hex
 OBJCOPY = avr-objcopy
-OFLAGS= -I binary -O ihex
+OFLAGS= -O ihex -R .eeprom
 HEX= $(BIN:%.bin=%.hex)
 
 #Hex to controller
@@ -31,5 +31,7 @@ flash: $(HEX)
 clean:
 	rm -rf $(BIN)
 	rm -rf $(HEX)
+
+re: clean flash
 
 .PRECIOUS: %.bin
