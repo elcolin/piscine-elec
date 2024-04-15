@@ -3,7 +3,7 @@ SRC = main.c
 
 #Compiler
 CC = avr-gcc
-CFLAGS = -mmcu=atmega328p -DF_CPU=115200
+CFLAGS = -mmcu=atmega328p -DF_CPU=115200 -Os
 BIN = $(SRC:%.c=%.bin)
 
 #Bin to hex
@@ -14,6 +14,8 @@ HEX= $(BIN:%.bin=%.hex)
 #Hex to controller
 DUDE = avrdude
 DFLAGS= -c arduino -p atmega328p -b 115200 -P /dev/ttyUSB0 -Uflash:w:
+# DFLAGS= -c arduino -p atmega328p -b 115200 -P /dev/tty.usbserial-10 -Uflash:w:
+
 
 all: hex
 

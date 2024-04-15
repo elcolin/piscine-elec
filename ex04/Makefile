@@ -13,6 +13,7 @@ HEX= $(BIN:%.bin=%.hex)
 
 #Hex to controller
 DUDE = avrdude
+# DFLAGS= -c arduino -p atmega328p -b 115200 -P /dev/tty.usbserial-10 -Uflash:w:
 DFLAGS= -c arduino -p atmega328p -b 115200 -P /dev/ttyUSB0 -Uflash:w:
 
 all: hex
