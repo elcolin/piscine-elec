@@ -8,11 +8,11 @@
 int main()
 {
     //DDRB because we use brooch 0 on B port (PBO)
-    DDRB |= (1<< PB0);
-    // DDRB &= ~(1 << PD2);
+    DDRB |= (1 << PB0);
+    //PB0 is set as output
     while (1)
     {
-        // if ()
+        //Setting the bit 0 on port B to 1 to turn on LED_D1
         LED_ON;
     }
 
