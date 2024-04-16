@@ -45,7 +45,7 @@ int main()
         {
             _delay_ms(100);
             //delay to avoid debouncing effect
-            if (SW1_UNPRESSED)
+            if (SW1_UNPRESSED && value < 15)
                 value++;
             binary_to_led(value);
             //checks if button came back to original position

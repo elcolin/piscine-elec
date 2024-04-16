@@ -1,10 +1,14 @@
 #Files
 SRC = main.c
 
+#Variable
+F_CPU = 1600000UL
+
 #Compiler
 CC = avr-gcc
-CFLAGS = -mmcu=atmega328p -DF_CPU=115200 -Os
+CFLAGS +=  -DF_CPU=$(F_CPU) -mmcu=atmega328p -Os
 BIN = $(SRC:%.c=%.bin)
+
 
 #Bin to hex
 OBJCOPY = avr-objcopy
@@ -13,9 +17,8 @@ HEX= $(BIN:%.bin=%.hex)
 
 #Hex to controller
 DUDE = avrdude
-DFLAGS= -c arduino -p atmega328p -b 115200 -P /dev/ttyUSB0 -Uflash:w:
 # DFLAGS= -c arduino -p atmega328p -b 115200 -P /dev/tty.usbserial-10 -Uflash:w:
-
+DFLAGS= -c arduino -p atmega328p -b 115200 -P /dev/ttyUSB0 -Uflash:w:
 
 all: hex
 
@@ -37,3 +40,5 @@ clean:
 re: clean flash
 
 .PRECIOUS: %.bin
+
+.PHONY: flash hex

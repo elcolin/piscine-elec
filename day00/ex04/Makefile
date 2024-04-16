@@ -1,10 +1,14 @@
 #Files
 SRC = main.c
 
+#Variable
+F_CPU = 1600000UL
+
 #Compiler
 CC = avr-gcc
-CFLAGS = -mmcu=atmega328p -DF_CPU=115200 -Os
+CFLAGS +=  -DF_CPU=$(F_CPU) -mmcu=atmega328p -Os
 BIN = $(SRC:%.c=%.bin)
+
 
 #Bin to hex
 OBJCOPY = avr-objcopy
@@ -36,3 +40,5 @@ clean:
 re: clean flash
 
 .PRECIOUS: %.bin
+
+.PHONY: flash hex
