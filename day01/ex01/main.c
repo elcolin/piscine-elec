@@ -2,6 +2,7 @@
 #include <util/delay.h>
 
 #define LED_D2 PB1
+#define CLOCK_FREQUENCY 16000000
 
 
 void init_led(char x)
@@ -10,15 +11,14 @@ void init_led(char x)
 }
 
 void timer1_init() {
-    // Set CTC mode with prescaler 1024
-    TCCR1A |= (1 << COM1A0) ;
+    TCCR1A |= (1 << COM1A0) ;// Toggle state of LED
+    // CTC mode with prescaler 1024 -> 16000000 / 1024
     TCCR1B |= (1 << CS10) | (1 << CS12) | (1 << WGM12);
 
-    
-    // Set compare value for 1 Hz frequency (depends on clock frequency)
-    OCR1A = (F_CPU / 1024 )/2;
 
-    // Enable Timer1 compare match interrupt
+    // Nombre de cycle d'horloge = Frequence de l'horloge divise / Frequence du signal or Frequence du signal = 1
+    OCR1A = (CLOCK_FREQUENCY / 1024 )/2; 
+
 }
 
 void main()

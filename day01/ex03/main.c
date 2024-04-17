@@ -1,6 +1,9 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
+#define CLOCK_FREQUENCY 16000000
+
+
 #define TRUE 0
 #define FALSE 1
 
@@ -32,7 +35,7 @@ void timer1_init() {
     TCCR1B |= (1 << CS10) | (1 << CS12) | (1 << WGM12) | (1 << WGM13);
 
     
-    ICR1 = (F_CPU / 1024 - 1);
+    ICR1 = (CLOCK_FREQUENCY / 1024 - 1);
     OCR1A = ICR1 * 0.1;
 }
 
