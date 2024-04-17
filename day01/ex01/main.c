@@ -16,7 +16,7 @@ void timer1_init() {
 
     
     // Set compare value for 1 Hz frequency (depends on clock frequency)
-    OCR1A = (16000000 / 1024 - 1)/2;
+    OCR1A = (F_CPU / 1024 )/2;
 
     // Enable Timer1 compare match interrupt
 }
