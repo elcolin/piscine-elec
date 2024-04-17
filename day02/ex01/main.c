@@ -1,6 +1,8 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+#define TRUE 0
+#define FALSE 1
 #define LED_D2 PB1
 #define CLOCK_FREQUENCY 16000000
 // Timer1 modes: p 140
@@ -13,33 +15,59 @@ void init_LED()
     DDRB |= (1 << LED_D2); // Configuration de la broche du LED comme sortie
 }
 
-void init_timer1() {
-    // Set CTC mode with prescaler 1024
-    // TCCR1A |= (1 << COM1A0);
-    // TCCR1B |= (1 << CS10) | (1 << CS12) | (1 << WGM12);
+void init_timer1()
+{
+    // Configuration du Timer1 en mode PWM, Phase Correct, 8-bit
+    TCCR1A |= (1 << WGM10); // Mode PWM, Phase Correct, 8-bit
+    TCCR1B |= (1 << CS11);  // Prescaler de 8, démarre le timer
 
-    
-    // OCR1A = (CLOCK_FREQUENCY / 1024);
-    // OCR1A = ICR1 * 0.1;
+    // Configuration de la broche de sortie OC1A (PB1) pour le mode de comparaison PWM
+    // DDRB |= (1 << PB1);    // Définit PB1 comme sortie
+    TCCR1A |= (1 << COM1A1); // Mettre OC1A (PB1) à 1 lorsqu'il y a une correspondance entre TCNT1 et OCR1A
 }
+
+// p132
 
 void init_timer0(){
 
     TCCR0A |= (1 << WGM01);
     TIMSK0 |= (1 << OCIE0A);
-    TCCR0B |= (1 << CS00);
+    // TCCR0B |= (1 << CS00);
 
-    OCR0A = 254;
+    TCCR0B |= (1 << CS01) | (1 << CS00);
+    OCR0A = 128;
 
 }
-
-
 
 ISR(TIMER0_COMPA_vect)
 {
-    //fonctionne
+    static uint8_t duty_cycle = 0; // Initialisation du rapport cyclique à 0
+    static int increasing = TRUE; // Flag pour indiquer si le rapport cyclique est en train d'augmenter
+
+    // Incrémente ou décrémente le rapport cyclique
+    if (increasing)
+    {
+        duty_cycle++;
+        if (duty_cycle == 100)
+            increasing = FALSE; // Inverser la direction lorsque le rapport cyclique atteint 100%
+    }
+    else
+    {
+        duty_cycle--;
+        if (duty_cycle == 0)
+            increasing = TRUE; // Inverser la direction lorsque le rapport cyclique atteint 0%
+    }
+
+    // Mettre à jour la valeur de comparaison OCR1A
+    OCR1A = (duty_cycle * 255) / 100; // Convertir le rapport cyclique en valeur pour OCR1A (0 à 255)
 
 }
+
+// ISR(TIMER0_COMPA_vect)
+// {
+//     //fonctionne
+
+// }
 // cli();
 
 //     PORTB ^= (1 << LED_D2);
@@ -51,6 +79,7 @@ void main()
 {
     init_LED();
     init_timer0();
+    init_timer1();
     sei(); //Set Enable Interrups
     while (1)
     {
