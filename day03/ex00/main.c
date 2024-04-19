@@ -17,7 +17,7 @@ void init_timer1()
 {
     TCCR1B |= (1 << WGM12) | (1 << CS12) | (1 << CS10);
     TIMSK1 |= (1 << OCIE1A);
-    OCR1A = (CLOCK_SPEED / (1024));
+    OCR1A = (CLOCK_SPEED / (1024)) - 1;
 
 }
 

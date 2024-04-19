@@ -28,7 +28,7 @@ void init_timer1()
 {
     TCCR1B |= (1 << WGM12) | (1 << CS12) | (1 << CS10);
     TIMSK1 |= (1 << OCIE1A);
-    OCR1A = (CLOCK_SPEED / (1024)) * 2;
+    OCR1A = ((CLOCK_SPEED / (1024)) - 1) * 2;
 
 }
 
@@ -53,9 +53,8 @@ void uart_init(unsigned int ubbr)
 
 void main()
 {
+    sei();
     uart_init((CLOCK_SPEED/ (16 * BAUD)));//Asynchrone normal mode -1 retirer a cause des arrondis
     init_timer1();
-    sei();
-    // uart_transmit('Z');
     while(1);
 }
