@@ -1,6 +1,6 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include <avr/interrupt.h>
+
 //Calculer Baud rate register setting: p182
 
 #define CLOCK_SPEED 16000000UL
