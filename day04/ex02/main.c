@@ -213,8 +213,10 @@ int main()
         i2c_stop();
         _delay_ms(80);
         i2c_start(0x71);
-        uart_printstr("\n");
+        for (int i = 0; i < 7; i++)
+            hex_value[i] = i2c_read();
         print_data(hex_value);
+        uart_printstr("\n");
         i2c_stop();
         _delay_ms(3000);
     }
