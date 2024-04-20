@@ -29,6 +29,21 @@ void uart_printstr(const char *str)
     }
 }
 
+void	ft_putnbr(long int n)
+{
+	long int	m;
+
+	m = n;
+	if (m < 0)
+		m *= -1;
+	if (n < 0)
+		uart_transmit('-');
+	if (m >= 10)
+		ft_putnbr(m / 10);
+	uart_transmit(m % 10 + '0');
+
+}
+
 void print_status()
 {
     switch (TWSR)
@@ -133,16 +148,62 @@ void i2c_write(char c)
 void i2c_stop()
 {
     TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
-    // TWCR = 0;
-
 }
+
+void print_binary(long int n) {
+    // Determine the number of bits in an integer
+    long int num_bits = sizeof(n) * 8;
+    
+    // Iterate through each bit starting from the most significant bit
+    for (long int i = num_bits - 1; i >= 0; i--) {
+        // Use bitwise AND to check the value of each bit
+        long int bit = (n >> i) & 1;
+        // Print the bit (either 0 or 1)
+        ft_putnbr(bit);
+    }
+    uart_printstr("\n");
+}
+// void    print_data(char *hex_value)
+// {
+//     char poids_fort = (hex_value[3] & 0x0F);
+//     char poids_moyen = hex_value[4];
+//     int poids_faible = hex_value[5];
+//     uart_printstr("poids fort: ");
+//     print_binary(poids_fort);
+//     long int ST = ((long int)poids_fort << 16);
+//     print_binary(ST);
+//     uart_printstr("poids moyen: ");
+//     // print_hex_value(hex_value[4])
+//     print_binary(poids_moyen);
+//     ST |= (((long int)poids_moyen & 0xFF) << 8);
+//     print_binary(ST);
+//     uart_printstr("poids faible: ");
+//     print_binary(poids_faible & 0xFF);
+//     ST |= (poids_faible & 0xFF);
+//     print_binary(ST);
+//     ft_putnbr(ST);
+//     uart_printstr("\n");
+//     float temp = (float) ST / 1048576.0f * 200 - 50 ;
+//     ft_putnbr((int) temp);
+// }
+
+void    print_data(char *hex_value)
+{
+    long int ST = ((long int)(hex_value[3] & 0x0F) << 16);
+    ST |= (((long int)hex_value[4] & 0xFF) << 8);
+    ST |= (hex_value[5] & 0xFF);
+    float temp = (float) ST / 1048576.0f * 200 - 50 ;
+    ft_putnbr((int) temp);
+}
+
 
 int main()
 {
+    char hex_value[7] = {0};
     uart_init((CLOCK_SPEED/ (16 * BAUD)));
 
     i2c_init();
-    while (1)
+    while(1)
     {
         i2c_start(0x70);
         _delay_ms(40);
@@ -152,10 +213,10 @@ int main()
         i2c_stop();
         _delay_ms(80);
         i2c_start(0x71);
-        for (int i = 0; i < 7; i++)
-            print_hex_value(i2c_read());
         uart_printstr("\n");
+        print_data(hex_value);
         i2c_stop();
+        _delay_ms(3000);
     }
 
 }

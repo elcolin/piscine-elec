@@ -31,7 +31,44 @@ void uart_printstr(const char *str)
 
 void print_status()
 {
-    
+    switch (TWSR)
+    {
+        case 0x08:
+            uart_printstr("A START condition has been transmitted\n");
+            break;
+        case 0x10:
+            uart_printstr("A repeated START condition has been transmitted\n");
+            break;
+        case 0x18:
+            uart_printstr("SLA+W has been transmitted and ACK has been received\n");
+            break;
+        case 0x20:
+            uart_printstr("SLA+W has been transmitted and NOT ACK has been received\n");
+            break;
+        case 0x28:
+            uart_printstr("Data byte has been transmitted and ACK has been received\n");
+            break;
+        case 0x30:
+            uart_printstr("Data byte has been transmitted and NOT ACK has been received\n");
+            break;
+        case 0x38:
+            uart_printstr("Arbitration lost in SLA or data bytes\n");
+            break;
+        case 0x40:
+            uart_printstr("SLA+R has been transmitted and ACK has been received\n");
+            break;
+        case 0x48:
+            uart_printstr("SLA+R has been transmitted and NOT ACK has been received\n");
+            break;
+        case 0x50:
+            uart_printstr("Data byte has been received and ACK has been returned\n");
+            break;
+        case 0x58:
+            uart_printstr("Data byte has been received and NOT ACK has been returned\n");
+            break;
+        default:
+            uart_printstr("Unknown status\n");
+    }
 }
 
 void uart_init(unsigned int ubbr)
@@ -73,8 +110,7 @@ void start_slave(char c, char code)
 {
     TWCR = (1 << TWEN) | (1 << TWINT) | (1 << TWSTA);
     while (!(TWCR & (1 << TWINT)));//on attend le TWI interrupt flag
-    if (TWSR != code)
-        return ERROR("Start error");
+    print_status();
     TWDR = c;
     TWCR = (1 << TWINT) | (1 << TWEN);
 }
@@ -84,9 +120,7 @@ void send_slave(char c)
     TWDR = c;
     TWCR = (1<<TWINT) | (1<<TWEN);
     while (!(TWCR & (1 << TWINT)));
-    if (TWSR != 0x28)
-        return ERROR("Send error");
-    uart_printstr("Send over\n");
+    print_status();
 }
 
 void i2c_start()//Master transmitter
@@ -95,20 +129,10 @@ void i2c_start()//Master transmitter
     _delay_ms(200);
 
     while (!(TWCR & (1 << TWINT)));
-    if (TWSR != 0x18)
-        ERROR("Master Transmitter error");
+    print_status();
     send_slave(0xBE);
     send_slave(0x08);
     send_slave(0x00);
-    
-    _delay_ms(10);
-
-    send_slave(0xAC);
-    _delay_ms(10);
-    send_slave(0x33);
-    _delay_ms(10);
-    send_slave(0x00);
-    _delay_ms(80);
 
 }
 
@@ -123,7 +147,6 @@ int main()
 
     i2c_init();
     i2c_start();
-    receive();
     i2c_stop();
     while (1);
 }

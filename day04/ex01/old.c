@@ -29,18 +29,46 @@ void uart_printstr(const char *str)
     }
 }
 
-void	ft_putnbr(int n)
+void print_status()
 {
-	long int	m;
-
-	m = n;
-	if (m >= 10)
-		// ft_putnbr_fd(m / 10);
-        uart_transmit(m/10);
-
-	// ft_putchar_fd(m % 10 + '0', fd);
-    uart_transmit(m % 10 + '0');
-
+    switch (TWSR)
+    {
+        case 0x08:
+            uart_printstr("A START condition has been transmitted\n");
+            break;
+        case 0x10:
+            uart_printstr("A repeated START condition has been transmitted\n");
+            break;
+        case 0x18:
+            uart_printstr("SLA+W has been transmitted and ACK has been received\n");
+            break;
+        case 0x20:
+            uart_printstr("SLA+W has been transmitted and NOT ACK has been received\n");
+            break;
+        case 0x28:
+            uart_printstr("Data byte has been transmitted and ACK has been received\n");
+            break;
+        case 0x30:
+            uart_printstr("Data byte has been transmitted and NOT ACK has been received\n");
+            break;
+        case 0x38:
+            uart_printstr("Arbitration lost in SLA or data bytes\n");
+            break;
+        case 0x40:
+            uart_printstr("SLA+R has been transmitted and ACK has been received\n");
+            break;
+        case 0x48:
+            uart_printstr("SLA+R has been transmitted and NOT ACK has been received\n");
+            break;
+        case 0x50:
+            uart_printstr("Data byte has been received and ACK has been returned\n");
+            break;
+        case 0x58:
+            uart_printstr("Data byte has been received and NOT ACK has been returned\n");
+            break;
+        default:
+            uart_printstr("Unknown status\n");
+    }
 }
 
 void uart_init(unsigned int ubbr)
@@ -54,114 +82,110 @@ void uart_init(unsigned int ubbr)
     UCSR0C = (1<<USBS0)|(3<<UCSZ00);
 }
 
-void ERROR()
+void print_hex_value(uint8_t data)
 {
-    uart_printstr("ERROR");
+    char hex[5];
+    hex[0] = "0123456789ABCDEF"[data >> 4];
+    hex[1] = "0123456789ABCDEF"[data & 0x0F];
+    // hex[2] = '\r';
+    // hex[3] = '\n';
+    hex[2] = ' ';
+    hex[3] = ' ';
+    hex[4] = '\0';
+    uart_printstr(hex);
 }
 
 void i2c_init()
 {
-    // TWBR = ((F_CPU / SCL_FREQUENCY) - 16) / 2;//si prescaler = 0;
-    // TWCR = (1 << TWEN) | (1 << TWINT) | (1 << TWSTA);
-    
+    TWBR = ((F_CPU / SCL_FREQUENCY) - 16) / 2; 
+    // TWCR = (1 << TWINT) | (1 << TWEN);
 }
-// (TWSR & 0xF8) == TW_START
+
+
+void start_slave(char c)
+{
+    TWCR = 0;
+    
+    TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTA);
+    while (!(TWCR & (1 << TWINT)));//on attend le TWI interrupt flag
+    // print_status();
+    TWDR = c;
+    TWCR = (1 << TWINT) | (1 << TWEN);
+    // TWDR = c;
+
+}
+
+
+char i2c_read()
+{
+    TWCR = (1<<TWINT) | (1<<TWEN) | (1 << TWEA) ;
+    while (!(TWCR & (1 << TWINT)));
+    // print_hex_value(TWDR);
+    return TWDR;
+}
+
 void receive()
 {
-    TWCR = (1 << TWEN) | (1 << TWINT) | (1 << TWSTA);
-    while (!(TWCR & (1 << TWINT)));//on attend le TWI interrupt flag
-    if (TWSR == 0x10)
+    start_slave(0x71);
+    _delay_ms(80);
+    while (!(TWCR & (1 << TWINT)));
+    int i = 0;
+    while (i < 7)
     {
-        uart_printstr("start received\n");
-        TWDR =  (0x38 << 1) | 1;
+        print_hex_value(i2c_read());
+        i++;
     }
 
-    TWCR = (1 << TWINT) | (1 << TWEN);
-    while (!(TWCR & (1 << TWINT)));
-    uart_printstr("SLA+R transmitted\n");
-    if (TWSR == 0x40){
-        uart_printstr("entered\n");
-
-        TWCR = (1<<TWINT) | (1<<TWEN);
-    }
-
-    while (!(TWCR & (1 << TWINT)));
-    if (TWSR == 0x50)
-        uart_printstr("command terminee!!\n");
 }
 
-void i2c_start()
+
+void i2c_write(char c)
 {
-    TWBR = ((F_CPU / SCL_FREQUENCY) - 16) / 2;//si prescaler = 0;
-    TWCR = (1 << TWEN) | (1 << TWINT) | (1 << TWSTA);
-    while (!(TWCR & (1 << TWINT)));//on attend le TWI interrupt flag
-    if (TWSR == 0x08)
-    {
-        uart_printstr("start received\n");
-        TWDR =  (0x38 << 1);//
-    }
-    TWCR = (1 << TWINT) | (1 << TWEN);
-    _delay_ms(10);
+    TWDR = c;
+    TWCR = (1<<TWINT) | (1<<TWEN);
     while (!(TWCR & (1 << TWINT)));
-    if (TWSR == 0x18){
-        uart_printstr("SLA+W transmitted entered\n");
-        TWDR = 0xAC;
-        TWCR = (1<<TWINT) | (1<<TWEN);
-    }
-    while (!(TWCR & (1 << TWINT)));
-    if (TWSR == 0x28)
-        uart_printstr("command terminee!!\n");
-    receive();
-
-    
+    // print_status();
 }
-// void {
-//     while (!(TWCR & (1 << TWINT)));
-//     if (!(TWSR == 0x40))
-//         error()
-//     value = TWDR;
-//     TWCR = (1<<TWINT) | (1<<TWEN);
 
-// }
+void i2c_start()//Master transmitter
+{
+    start_slave((0x38 << 1) & ~(1));
+    _delay_ms(200);
+
+    while (!(TWCR & (1 << TWINT)));
+    _delay_ms(10);
+    i2c_write(0xAC);
+    _delay_ms(10);
+    i2c_write(0x33);
+    _delay_ms(10);
+    i2c_write(0x00);
+    _delay_ms(80);
+
+}
 
 void i2c_stop()
 {
     TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
-}
+    // TWCR = 0;
 
-// TWCR |= (1 << TWINT);// on reinitialise TWINT
+}
 
 int main()
 {
+    char hex_value[7] = {0};
     uart_init((CLOCK_SPEED/ (16 * BAUD)));
 
     i2c_init();
-    i2c_start();
-    i2c_stop();
-    while (1);
+    while (1)
+    {
+        i2c_start();
+        i2c_stop();
+        _delay_ms(80);
+
+        receive();
+        uart_printstr("\n");
+        i2c_stop();
+    }
+        // i2c_stop();
+
 }
-
-
-// sei();
-// TWCR |= (1 << TWIE);
-
-// // on reinitialise TWINT avant la condition START
-//     //transmettre une condition START via TWCR
-//     TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
-//     while (!(TWCR & (1 << TWINT)));//on attend le TWI interrupt flag
-//     // on check dans TWSR si c'est le bon status code (start bien envoye)'
-//     if ((TWSR & 0xF8) != TW_START)
-//         ERROR();
-//     //Load SLA+W dans TWDR
-//     TWDR = 0x50;
-//     //ecrire une valeur specifique dans TWCR, instructing the TWI hardware to transmit the SLA+W present in TWDR. 
-//     TWCR = (1 << TWINT) | (1 << TWEN);
-//     while (!(TWCR & (1 << TWINT)));//on attend le TWI interrupt flag
-//     // on check si SLA+W envoye et ACK recu
-//     // on check la valeur de TWSR -> packet entier et ACK
-//     // si expected, load data packet dans TWDR
-//     TWCR |= (1 << TWINT);// on reinitialise TWINT
-//     while (!(TWCR & (1 << TWINT)));//on attend le TWI interrupt flag
-//     // on check dans TWSR si la data a ete envoye et ACK recu
-//     // si expected on ecrit dans TWCR une condition stop
-//     TWCR |= (1 << TWINT);// on reinitialise TWINT
