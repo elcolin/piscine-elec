@@ -29,9 +29,18 @@ void uart_printstr(const char *str)
     }
 }
 
-void print_status()
+void	ft_putnbr(int n)
 {
-    
+	long int	m;
+
+	m = n;
+	if (m >= 10)
+		// ft_putnbr_fd(m / 10);
+        uart_transmit(m/10);
+
+	// ft_putchar_fd(m % 10 + '0', fd);
+    uart_transmit(m % 10 + '0');
+
 }
 
 void uart_init(unsigned int ubbr)
@@ -78,6 +87,33 @@ void start_slave(char c, char code)
     TWDR = c;
     TWCR = (1 << TWINT) | (1 << TWEN);
 }
+
+char receive_slave()
+{
+    TWCR = (1<<TWINT) | (1<<TWEN) | (1 << TWEA);
+    while (!(TWCR & (1 << TWINT)));
+    // print_hex_value(TWSR);
+    if (TWSR != 0x50)
+        ERROR("receive error");
+    uart_printstr("Receive over\n");
+    print_hex_value(TWDR);
+    // TWCR = (1<<TWINT) | (1<<TWEN);
+    return TWDR;
+}
+
+void receive()
+{
+    start_slave(0x71, 0x10);
+    _delay_ms(80);
+
+    while (!(TWCR & (1 << TWINT)));
+    if (TWSR != 0x40)
+        ERROR("Master receiver error");
+    while ((receive_slave()))
+        _delay_ms(80);
+}
+
+
 
 void send_slave(char c)
 {
