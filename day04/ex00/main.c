@@ -5,13 +5,6 @@
 #include "uart.h"
 #include "i2c.h"
 
-#define SCL_FREQUENCY 100000
-// #define F_CPU 16000000
-
-#define CLOCK_SPEED 16000000UL
-#define BAUD 115200
-#define SLA 0x38
-
 // p223 schema explicatif
 
 

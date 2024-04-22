@@ -1,44 +1,47 @@
-#Files
-SRC = main.c
 
-#Variable
-F_CPU = 16000000UL
+BIN = main.bin
+HEX = main.hex
 
-#Compiler
 CC = avr-gcc
-CFLAGS +=  -DF_CPU=$(F_CPU) -mmcu=atmega328p -Os
-BIN = $(SRC:%.c=%.bin)
 
+CPU_SPEED = 16000000UL
+MICROCONTROLLER = atmega328p
+AVR_GCC_ARGS = -DF_CPU=$(CPU_SPEED) -mmcu=$(MICRO_NAME)
+#CFLAGS = -Wall -Wextra -Werror
 
-#Bin to hex
-OBJCOPY = avr-objcopy
-OFLAGS= -O ihex -R .eeprom
-HEX= $(BIN:%.bin=%.hex)
+BAUDRATE = 115200
+PROGRAMMER = arduino
 
-#Hex to controller
-DUDE = avrdude
-# DFLAGS= -c arduino -p atmega328p -b 115200 -P /dev/tty.usbserial-10 -Uflash:w:
-DFLAGS= -c arduino -p atmega328p -b 115200 -P /dev/ttyUSB0 -Uflash:w:
+DEVICE = /dev/ttyUSB0
 
-all: hex flash
+SRCS = main.c \
+		uart.c \
+		i2c.c \
+
+OBJS = $(addprefix objs/,$(SRCS:.c=.o))
+OBJ_DIRS = $(sort $(dir $(OBJS)))
+
+flash: $(HEX)
+	avrdude -v -c $(PROGRAMMER) -p $(MICROCONTROLLER) -P $(DEVICE) -b $(BAUDRATE) -D -U flash:w:$(HEX)
+
+all: flash
 
 hex: $(HEX)
 
-%.bin: %.c
-	$(CC) $(CFLAGS) $< -o $@
+objs/%.o : %.c | $(OBJ_DIRS)
+	$(CC) -Os -DF_CPU=$(CPU_SPEED) -mmcu=$(MICROCONTROLLER) $(CFLAGS) -I. -c $< -o $@
 
-%.hex: %.bin
-	$(OBJCOPY) $(OFLAGS) $< $@
+$(BIN) : $(OBJS)
+	$(CC) -Os -DF_CPU=$(CPU_SPEED) -mmcu=$(MICROCONTROLLER) $(CFLAGS) $(OBJS) -o main.bin
 
-flash: $(HEX)
-	$(DUDE) $(DFLAGS)$<:i
+$(HEX): $(BIN)
+	avr-objcopy -R .eeprom -O ihex $(BIN) $(HEX)
+
+$(OBJ_DIRS):
+	mkdir -p $@
 
 clean:
-	rm -rf $(BIN)
-	rm -rf $(HEX)
+	rm -rf objs $(HEX) $(BIN)
 
-re: clean flash
-
-.PRECIOUS: %.bin
-
-.PHONY: flash hex
+re: clean all
+.PHONY: all hex flash clean re
