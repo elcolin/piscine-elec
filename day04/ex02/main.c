@@ -3,6 +3,7 @@
 #include <util/delay.h>
 #include <stdio.h>
 
+
 #define SCL_FREQUENCY 100000
 // #define F_CPU 16000000
 
@@ -12,7 +13,7 @@
 
 // p223 shcema explicatif
 
-void uart_transmit(unsigned char data)
+void uart_tx( char data)
 {
     while (!(UCSR0A & (1 << UDRE0))); //si on utilise A register
     UDR0 = data;
@@ -23,9 +24,9 @@ void uart_printstr(const char *str)
     int i = 0;
     while (str[i])
     {
-        uart_transmit(str[i]);
+        uart_tx(str[i]);
         if (str[i++] == '\n')
-            uart_transmit('\r');
+            uart_tx('\r');
     }
 }
 
@@ -37,10 +38,10 @@ void	ft_putnbr(long int n)
 	if (m < 0)
 		m *= -1;
 	if (n < 0)
-		uart_transmit('-');
+		uart_tx('-');
 	if (m >= 10)
 		ft_putnbr(m / 10);
-	uart_transmit(m % 10 + '0');
+	uart_tx(m % 10 + '0');
 
 }
 
@@ -163,6 +164,53 @@ void print_binary(long int n) {
     }
     uart_printstr("\n");
 }
+
+
+void    print_data(char *hex_value)
+{
+    long int ST = ((long int)(hex_value[3] & 0x0F) << 16);
+    ST |= (((long int)hex_value[4] & 0xFF) << 8);
+    ST |= (hex_value[5] & 0xFF);
+    float temp = (float) ST / 1048576.0f * 200 - 50 ;
+
+    long int RH = ((long int)(hex_value[1] & 0xFF) << 12) | ((long int)(hex_value[2] & 0xFF) << 8) | (hex_value[3] & 0x0F);
+    float hum = (float) RH / 1048576.0f * 100;
+    char buffer[7];
+    dtostrf(temp, 2, 0, &buffer);
+    uart_printstr("Temperature: ");
+    uart_printstr(buffer);
+    uart_printstr("ºC, Humidity: ");
+    dtostrf(hum, 3, 1, &buffer);
+    uart_printstr(buffer);
+    uart_printstr("%\n");
+}
+
+
+int main()
+{
+    char hex_value[7] = {0};
+    uart_init((CLOCK_SPEED/ (16 * BAUD)));
+
+    i2c_init();
+    while(1)
+    {
+        i2c_start(0x70);
+        _delay_ms(40);
+        i2c_write(0xAC);
+        i2c_write(0x33);
+        i2c_write(0x00);
+        i2c_stop();
+        _delay_ms(80);
+        i2c_start(0x71);
+        for (int i = 0; i < 7; i++)
+            hex_value[i] = i2c_read();
+        print_data(hex_value);
+        i2c_stop();
+        _delay_ms(3000);
+    }
+
+}
+
 // void    print_data(char *hex_value)
 // {
 //     char poids_fort = (hex_value[3] & 0x0F);
@@ -186,39 +234,3 @@ void print_binary(long int n) {
 //     float temp = (float) ST / 1048576.0f * 200 - 50 ;
 //     ft_putnbr((int) temp);
 // }
-
-void    print_data(char *hex_value)
-{
-    long int ST = ((long int)(hex_value[3] & 0x0F) << 16);
-    ST |= (((long int)hex_value[4] & 0xFF) << 8);
-    ST |= (hex_value[5] & 0xFF);
-    float temp = (float) ST / 1048576.0f * 200 - 50 ;
-    ft_putnbr((int) temp);
-}
-
-
-int main()
-{
-    char hex_value[7] = {0};
-    uart_init((CLOCK_SPEED/ (16 * BAUD)));
-
-    i2c_init();
-    while(1)
-    {
-        i2c_start(0x70);
-        _delay_ms(40);
-        i2c_write(0xAC);
-        i2c_write(0x33);
-        i2c_write(0x00);
-        i2c_stop();
-        _delay_ms(80);
-        i2c_start(0x71);
-        for (int i = 0; i < 7; i++)
-            hex_value[i] = i2c_read();
-        print_data(hex_value);
-        uart_printstr("\n");
-        i2c_stop();
-        _delay_ms(3000);
-    }
-
-}

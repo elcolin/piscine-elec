@@ -12,7 +12,7 @@
 
 // p223 shcema explicatif
 
-void uart_transmit(unsigned char data)
+void uart_tx( char data)
 {
     while (!(UCSR0A & (1 << UDRE0))); //si on utilise A register
     UDR0 = data;
@@ -23,9 +23,9 @@ void uart_printstr(const char *str)
     int i = 0;
     while (str[i])
     {
-        uart_transmit(str[i]);
+        uart_tx(str[i]);
         if (str[i++] == '\n')
-            uart_transmit('\r');
+            uart_tx('\r');
     }
 }
 
@@ -36,10 +36,10 @@ void	ft_putnbr(int n)
 	m = n;
 	if (m >= 10)
 		// ft_putnbr_fd(m / 10);
-        uart_transmit(m/10);
+        uart_tx(m/10);
 
 	// ft_putchar_fd(m % 10 + '0', fd);
-    uart_transmit(m % 10 + '0');
+    uart_tx(m % 10 + '0');
 
 }
 

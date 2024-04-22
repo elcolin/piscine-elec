@@ -7,7 +7,7 @@
 #define BAUD 115200
 
 //p185
-void uart_transmit(unsigned char data)
+void uart_tx( char data)
 {
     while (!(UCSR0A & (1 << UDRE0))); //si on utilise A register
     UDR0 = data;
@@ -18,9 +18,9 @@ void uart_printstr(const char *str)
     int i = 0;
     while (str[i])
     {
-        uart_transmit(str[i]);
+        uart_tx(str[i]);
         if (str[i++] == '\n')
-            uart_transmit('\r');
+            uart_tx('\r');
     }
 }
 

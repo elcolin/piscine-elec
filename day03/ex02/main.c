@@ -8,7 +8,7 @@
 #define LED_D2 PB1
 
 //p185
-void uart_transmit(unsigned char data)
+void uart_tx( char data)
 {
     while (!(UCSR0A & (1 << UDRE0))); //si on utilise A register
     UDR0 = data;
@@ -37,7 +37,7 @@ void main()
     uart_init((CLOCK_SPEED/ (16 * BAUD)));//Asynchrone normal mode -1 retirer a cause des arrondis
     while (1)
     {
-        uart_transmit(uart_rx());
+        uart_tx(uart_rx());
     }
 }
 

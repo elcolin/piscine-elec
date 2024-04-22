@@ -7,7 +7,7 @@
 #define BAUD 115200
 
 //p185
-void uart_transmit(unsigned char data)
+void uart_tx( char data)
 {
     while (!(UCSR0A & (1 << UDRE0))); //si on utilise A register
     UDR0 = data;
@@ -23,7 +23,7 @@ void init_timer1()
 
 ISR(TIMER1_COMPA_vect)
 {
-    uart_transmit('Z');
+    uart_tx('Z');
 
 }
 
@@ -43,6 +43,6 @@ void main()
     uart_init((CLOCK_SPEED/ (16 * BAUD)));//Asynchrone normal mode -1 retirer a cause des arrondis
     init_timer1();
     sei();
-    // uart_transmit('Z');
+    // uart_tx('Z');
     while(1);
 }

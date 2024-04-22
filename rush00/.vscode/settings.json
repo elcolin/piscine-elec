@@ -1,0 +1,7 @@
+{
+	"files.associations": {
+		"interrupt.h": "c",
+		"whoiswho.h": "c"
+	},
+	"C_Cpp.errorSquiggles": "disabled"
+}

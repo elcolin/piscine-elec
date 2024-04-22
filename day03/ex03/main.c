@@ -8,7 +8,7 @@
 #define LED_D2 PB1
 
 //p185
-void uart_transmit(unsigned char data)
+void uart_tx( char data)
 {
     while (!(UCSR0A & (1 << UDRE0))); //si on utilise A register
     UDR0 = data;
@@ -25,7 +25,7 @@ char convert_case(char c)
 
 ISR(USART_RX_vect)
 {
-    uart_transmit(convert_case(UDR0));
+    uart_tx(convert_case(UDR0));
 }
 
 void uart_init(unsigned int ubbr)
