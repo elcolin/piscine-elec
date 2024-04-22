@@ -6,17 +6,16 @@ CC = avr-gcc
 
 CPU_SPEED = 16000000UL
 MICROCONTROLLER = atmega328p
-AVR_GCC_ARGS = -DF_CPU=$(CPU_SPEED) -mmcu=$(MICRO_NAME)
+
 #CFLAGS = -Wall -Wextra -Werror
 
 BAUDRATE = 115200
 PROGRAMMER = arduino
 
-DEVICE = /dev/ttyUSB0
+DEVICE = /dev/tty.usbserial-10 #/dev/ttyUSB0 
 
 SRCS = main.c \
 		uart.c \
-		i2c.c \
 
 OBJS = $(addprefix objs/,$(SRCS:.c=.o))
 OBJ_DIRS = $(sort $(dir $(OBJS)))
