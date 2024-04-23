@@ -8,7 +8,7 @@
 #define SW2_PRESSED !(PIND & (1 << PD4))
 #define SW2_UNPRESSED (PIND & (1 << PD4))
 
-#define MAGIC 125
+#define MAGIC 124
 #define MADIC_ADDR 5
 #define COUNT_ADDR 4
 
@@ -28,16 +28,16 @@ void binary_to_led(char value)
 
 void init_eeprom()
 {
-	for (unsigned char i = 0; i < 4; i++)
-		eeprom_update_byte((uint8_t *)i, 0);
-	eeprom_update_byte((uint8_t *)MADIC_ADDR, MAGIC);
-	eeprom_update_byte((uint8_t *)COUNT_ADDR, 0);
+	for (uint16_t i = 0; i < 4; i++)
+		eeprom_update_byte((uint8_t *) i, 0);
+	eeprom_update_byte((uint8_t *) MADIC_ADDR, MAGIC);
+	eeprom_update_byte((uint8_t *) COUNT_ADDR, 0);
 
 }
 
 void main()
 {	
-	unsigned char	current_cnt = 0;
+	uint16_t	current_cnt = 0;
 	unsigned char	value = 0;
 	DDRB |= (1 << PB0);
     DDRB |= (1 << PB1);
@@ -48,11 +48,11 @@ void main()
     DDRB &= ~(1 << PD2);
     DDRB &= ~(1 << PD4);
 
-	if (eeprom_read_byte((uint8_t *)MADIC_ADDR) != MAGIC)
+	if (eeprom_read_byte((uint8_t *) MADIC_ADDR) != MAGIC)
 		init_eeprom();
 	else
 	{
-		current_cnt = eeprom_read_byte((uint8_t *)COUNT_ADDR);
+		current_cnt = eeprom_read_byte((uint8_t *) COUNT_ADDR);
 		value = eeprom_read_byte((uint8_t *)current_cnt);
 	}
 	binary_to_led(value);
@@ -75,7 +75,7 @@ void main()
 				if (++current_cnt >= COUNT_ADDR)
 					current_cnt = 0;
 				value = eeprom_read_byte((uint8_t *)current_cnt);
-				eeprom_update_byte((uint8_t *)COUNT_ADDR, current_cnt);
+				eeprom_update_byte((uint8_t *) COUNT_ADDR, current_cnt);
 				binary_to_led(value);
 			}
     	}
