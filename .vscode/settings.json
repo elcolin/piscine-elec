@@ -1,9 +1,10 @@
 {
     "files.associations": {
-        "io.h": "c",
-        "delay.h": "c",
-        "interrupt.h": "c",
-        "uart.h": "c",
-        "i2c.h": "c"
-    }
+		"io.h": "c",
+		"delay.h": "c",
+		"interrupt.h": "c",
+		"uart.h": "c",
+		"i2c.h": "c",
+		"led.h": "c"
+	}
 }
